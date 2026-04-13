@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AINexForge | Autonomous Decision Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --bg-surface: #0f172a;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --accent: #10b981;
+            --danger: #ef4444;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header --- */
+        header {
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .logo-icon svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        h1 span {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- Main Layout --- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 0;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, var(--bg-deep) 100%);
+        }
+
+        .panel-label {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(2, 6, 23, 0.8);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- Visualizations --- */
+        .node-container {
+            display: flex;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .node {
+            width: 120px;
+            height: 100px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .node.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .node.error {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .node span {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .connector {
+            width: 4rem;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+        }
+
+        .connector-flow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: var(--primary);
+            transition: width 1s ease;
+        }
+
+        /* --- Chart Footer --- */
+        .metrics-footer {
+            height: 180px;
+            padding: 1rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .bar {
+            flex: 1;
+            background: var(--primary);
+            min-height: 4px;
+            transition: height 0.5s ease;
+            border-radius: 2px 2px 0 0;
+            opacity: 0.6;
+        }
+
+        .bar.risk { background: var(--danger); }
+
+        /* --- Sidebar Console --- */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console {
+            flex: 1;
+            background: rgba(2, 6, 23, 0.6);
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+
+        .console-msg {
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .msg-system { color: var(--primary); font-weight: bold; }
+        .msg-alert { color: var(--danger); font-weight: bold; }
+        .msg-success { color: var(--accent); }
+
+        .strategy-card {
+            background: #1e293b;
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .strategy-card:hover {
+            border-color: var(--primary);
+            background: #232f45;
+        }
+
+        .strategy-card.selected {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .mini-bar-bg {
+            height: 4px;
+            background: #0f172a;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .health-bar {
+            height: 4px;
+            background: #1e293b;
+            border-radius: 2px;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .health-fill {
+            position: absolute;
+            height: 100%;
+            background: var(--primary);
+            width: 85%;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        footer.site-footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+            </div>
+            <h1>AINexForge <span>Core</span></h1>
+        </div>
+        <div class="header-actions">
+            <div id="statusPill" class="status-pill">System Ready</div>
+            <button id="nextBtn" class="btn-primary">
+                <svg id="playIcon" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                <span id="btnText">Initialize Demo</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="workspace">
+            <div class="panel canvas-area">
+                <div class="panel-label">
+                    <svg style="width:12px;height:12px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Digital Twin environment
+                </div>
+                
+                <div id="visualContent" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                    <!-- Placeholder/Idle -->
+                    <div id="idleMsg" style="text-align:center; color:var(--text-dim)">
+                        <p>Waiting for system initialization...</p>
+                    </div>
+
+                    <!-- Twin Nodes -->
+                    <div id="nodesView" class="node-container hidden">
+                        <div class="node active" id="node1">
+                            <span>NODE_01</span>
+                            <svg style="width:24px;color:var(--primary)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="connector"><div id="flow1" class="connector-flow"></div></div>
+                        <div class="node active" id="node2">
+                            <span>NODE_02</span>
+                            <svg id="node2Icon" style="width:24px;color:var(--primary)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="connector"><div id="flow2" class="connector-flow"></div></div>
+                        <div class="node active" id="node3">
+                            <span>NODE_03</span>
+                            <svg style="width:24px;color:var(--primary)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel metrics-footer">
+                <div class="panel-label">Telemetry Feed</div>
+                <div class="chart-header">
+                    <span style="color:var(--primary)">■ System Efficiency</span>
+                    <span style="color:var(--danger)">■ Risk Factor</span>
+                </div>
+                <div class="chart-container" id="telemetryChart">
+                    <!-- Bars generated via JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="panel sidebar">
+            <div class="console" id="console">
+                <div class="console-msg text-dim">[[ System awaiting manual override... ]]</div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-dim); font-weight:bold;">
+                    <span>NEURAL PATH HEALTH</span>
+                    <span>94%</span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-fill"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        © 2026 AINexForge. All rights reserved. Professional Grade Autonomous Systems.
+    </footer>
+
+    <script>
+        const STAGES = ['IDLE', 'TWIN', 'DISRUPTION', 'OPTIMIZATION', 'EXECUTION', 'LEARNING'];
+        let currentStageIndex = 0;
+        
+        const nextBtn = document.getElementById('nextBtn');
+        const btnText = document.getElementById('btnText');
+        const statusPill = document.getElementById('statusPill');
+        const consoleEl = document.getElementById('console');
+        const telemetryChart = document.getElementById('telemetryChart');
+        const idleMsg = document.getElementById('idleMsg');
+        const nodesView = document.getElementById('nodesView');
+        const node2 = document.getElementById('node2');
+        const node2Icon = document.getElementById('node2Icon');
+        const flow1 = document.getElementById('flow1');
+        const flow2 = document.getElementById('flow2');
+
+        // Initial Chart Data
+        const chartLength = 40;
+        let efficiencyData = Array.from({length: chartLength}, () => 85 + Math.random() * 10);
+        let riskData = Array.from({length: chartLength}, () => 5 + Math.random() * 5);
+
+        function updateChart() {
+            telemetryChart.innerHTML = '';
+            for(let i=0; i<chartLength; i++) {
+                const barGroup = document.createElement('div');
+                barGroup.style.display = 'flex';
+                barGroup.style.flexDirection = 'column';
+                barGroup.style.flex = '1';
+                barGroup.style.gap = '2px';
+                barGroup.style.justifyContent = 'flex-end';
+
+                const effBar = document.createElement('div');
+                effBar.className = 'bar';
+                effBar.style.height = `${efficiencyData[i]}%`;
+                
+                const rskBar = document.createElement('div');
+                rskBar.className = 'bar risk';
+                rskBar.style.height = `${riskData[i]}%`;
+
+                barGroup.appendChild(rskBar);
+                barGroup.appendChild(effBar);
+                telemetryChart.appendChild(barGroup);
+            }
+        }
+
+        function addLog(msg, type = 'system') {
+            const div = document.createElement('div');
+            div.className = `console-msg msg-${type}`;
+            div.innerHTML = `> ${msg}`;
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function handleStage() {
+            const stage = STAGES[currentStageIndex];
+            
+            if (stage === 'IDLE') {
+                currentStageIndex++;
+                handleStage();
+                return;
+            }
+
+            nextBtn.disabled = true;
+            statusPill.textContent = `ACTIVE: ${stage}`;
+            statusPill.style.color = 'var(--primary)';
+            statusPill.style.borderColor = 'var(--primary)';
+
+            if (stage === 'TWIN') {
+                btnText.textContent = 'Advancing...';
+                idleMsg.classList.add('hidden');
+                nodesView.classList.remove('hidden');
+                addLog('Initializing Digital Twin architecture...', 'system');
+                setTimeout(() => {
+                    flow1.style.width = '100%';
+                    addLog('Node map synchronized.', 'success');
+                }, 500);
+                setTimeout(() => {
+                    flow2.style.width = '100%';
+                    addLog('Real-time telemetry link established.', 'success');
+                    nextBtn.disabled = false;
+                    btnText.textContent = 'Simulate Disruption';
+                }, 1200);
+
+            } else if (stage === 'DISRUPTION') {
+                addLog('CRITICAL: External disruption detected in Node_02.', 'alert');
+                node2.classList.add('error');
+                node2Icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`;
+                
+                // Panic the chart
+                let count = 0;
+                const panicId = setInterval(() => {
+                    efficiencyData.shift();
+                    efficiencyData.push(Math.max(30, 80 - count * 5));
+                    riskData.shift();
+                    riskData.push(Math.min(90, 10 + count * 8));
+                    updateChart();
+                    count++;
+                    if(count > 10) clearInterval(panicId);
+                }, 100);
+
+                setTimeout(() => {
+                    addLog('Impact analysis: 42% decrease in throughput predicted.', 'alert');
+                    nextBtn.disabled = false;
+                    btnText.textContent = 'Identify Strategies';
+                }, 1500);
+
+            } else if (stage === 'OPTIMIZATION') {
+                addLog('Decision Engine engaged. Evaluating Pareto Frontier...', 'system');
+                
+                const strategies = [
+                    { id: 'A', name: 'Rapid Recovery', cost: 90, risk: 10, desc: 'Highest cost, instant resolution.'},
+                    { id: 'B', name: 'Balanced Response', cost: 45, risk: 25, desc: 'Optimal cost/speed trade-off.'}
+                ];
+
+                setTimeout(() => {
+                    strategies.forEach(s => {
+                        const card = document.createElement('div');
+                        card.className = 'strategy-card';
+                        card.innerHTML = `
+                            <div style="font-weight:bold; font-size:0.75rem">${s.name}</div>
+                            <div style="font-size:0.65rem; color:var(--text-dim)">${s.desc}</div>
+                            <div class="stat-grid">
+                                <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${s.cost}%; background:var(--primary)"></div></div>
+                                <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${s.risk}%; background:var(--danger)"></div></div>
+                                <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:70%; background:var(--accent)"></div></div>
+                            </div>
+                        `;
+                        card.onclick = () => {
+                            document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
+                            card.classList.add('selected');
+                            nextBtn.disabled = false;
+                        };
+                        consoleEl.appendChild(card);
+                    });
+                    consoleEl.scrollTop = consoleEl.scrollHeight;
+                    btnText.textContent = 'Execute Selection';
+                }, 1000);
+
+            } else if (stage === 'EXECUTION') {
+                addLog('AUTONOMOUS EXECUTION INITIATED', 'success');
+                addLog('Reconfiguring logistics pipelines...', 'system');
+                
+                setTimeout(() => {
+                    node2.classList.remove('error');
+                    node2Icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />`;
+                    
+                    // Recover the chart
+                    let count = 0;
+                    const recoverId = setInterval(() => {
+                        efficiencyData.shift();
+                        efficiencyData.push(Math.min(95, 40 + count * 6));
+                        riskData.shift();
+                        riskData.push(Math.max(5, 80 - count * 9));
+                        updateChart();
+                        count++;
+                        if(count > 12) clearInterval(recoverId);
+                    }, 100);
+
+                    addLog('Physical world assets synced with twin state.', 'success');
+                    nextBtn.disabled = false;
+                    btnText.textContent = 'Feedback Loop';
+                }, 1500);
+
+            } else if (stage === 'LEARNING') {
+                addLog('Recursive Learning Loop Active.', 'system');
+                addLog('Model adjusted: Node_02 sensitivity improved by 14.2%.', 'success');
+                addLog('System state: OPTIMIZED', 'success');
+                
+                btnText.textContent = 'Restart System';
+                nextBtn.disabled = false;
+                currentStageIndex = -1; // Reset loop
+            }
+
+            currentStageIndex++;
+        }
+
+        nextBtn.addEventListener('click', handleStage);
+        updateChart();
+
+        // Slow hover animation for telemetry
+        setInterval(() => {
+            if (currentStageIndex === 1 || currentStageIndex === 0) {
+                efficiencyData.shift();
+                efficiencyData.push(85 + Math.random() * 10);
+                riskData.shift();
+                riskData.push(5 + Math.random() * 5);
+                updateChart();
+            }
+        }, 2000);
+
+    </script>
+</body>
+</html>
